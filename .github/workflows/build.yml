@@ -1,0 +1,49 @@
+name: build-windows
+
+# CHSBPlus WPF ilovasini Windows'da (bulutda) quradi — Mac'da Windows kerak emas.
+# Har push'da ham imtihon, ham amaliy (practice) .exe quriladi va "Artifacts" bo'limiga yuklanadi.
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up .NET 10 SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Restore
+        run: dotnet restore CHSBPlus/CHSBPlus.csproj
+
+      # Imtihon (rasmiy) qurilishi — lockdown yoqilgan, AI yordam YO'Q.
+      - name: Publish exam build
+        run: >
+          dotnet publish CHSBPlus/CHSBPlus.csproj
+          -c Release -r win-x64 --self-contained true
+          -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true
+          -o publish/exam
+
+      # Amaliy (practice) qurilishi — lockdown o'chiq + yashirin [ tugmasi AI yordami.
+      - name: Publish practice build
+        run: >
+          dotnet publish CHSBPlus/CHSBPlus.csproj
+          -c Release -r win-x64 --self-contained true -p:Practice=true
+          -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true
+          -o publish/practice
+
+      - name: Upload exam exe
+        uses: actions/upload-artifact@v4
+        with:
+          name: CHSBPlus-exam
+          path: publish/exam
+
+      - name: Upload practice exe
+        uses: actions/upload-artifact@v4
+        with:
+          name: CHSBPlus-practice
+          path: publish/practice

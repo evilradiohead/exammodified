@@ -1,0 +1,16 @@
+{
+  "_comment": "Amaliy (practice) qurilishi uchun namuna config. CHSBPlus.Practice.exe yoniga 'config.json' nomi bilan qo'ying. aiApiKey ni muassasa Anthropic kaliti bilan to'ldiring va sarflashga cheklov qo'ying.",
+  "homeUrl": "https://chsb.piima.uz/",
+  "exitPassword": "",
+  "cameraPolicy": "never",
+  "autoUpdate": false,
+  "aiApiKey": "",
+  "aiModel": "claude-opus-5-5",
+  "closeWindowedAppsOnStartup": false,
+  "keepProcessGuardRunning": false,
+  "blockedProcessNames": [],
+  "blockedWindowTitleWords": [],
+  "allowedHosts": [
+    "chsb.piima.uz"
+  ]
+}

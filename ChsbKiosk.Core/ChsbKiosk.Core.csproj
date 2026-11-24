@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <AssemblyName>ChsbKiosk.Core</AssemblyName>
+    <GenerateAssemblyInfo>False</GenerateAssemblyInfo>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <LangVersion>latest</LangVersion>
+    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+    <CheckForOverflowUnderflow>False</CheckForOverflowUnderflow>
+    <!-- Dekompilyatsiya qilingan kod nullable-toza emas; bu ogohlantirishlar zararsiz. -->
+    <NoWarn>$(NoWarn);CS8600;CS8601;CS8602;CS8603;CS8604;CS8618;CS8625</NoWarn>
+  </PropertyGroup>
+  <!-- Barcha ilgarigi <Reference HintPath=...> lar .NET 10  bazaviy kutubxonalari edi —
+       ular SDK tarkibida keladi, shuning uchun olib tashlandi. Tashqi paket kerak emas. -->
+</Project>

@@ -1,0 +1,199 @@
+<!doctype html>
+<html lang="uz">
+<head>
+<meta charset="utf-8">
+<!--
+  Bu sahifa sayt EMAS: ilova ichidagi mahalliy shablon. U faqat savol matnini
+  (HTML, rasm, jadval) chizadi. Tarmoqqa chiqishi taqiqlangan — faqat rasmlar
+  va faqat ruxsat etilgan serverdan. Savol ichidagi har qanday skript ishlamaydi.
+
+  Ko'rinishi saytdagi savol kartasi (components/test-taking/question-card.tsx)
+  bilan bir xil: bir xil ranglar, burchaklar va Onest shrifti.
+-->
+<meta http-equiv="Content-Security-Policy"
+      content="default-src 'none'; img-src data: blob: {{IMG_ORIGIN}}; font-src data:; style-src 'unsafe-inline'; script-src 'nonce-{{NONCE}}'; form-action 'none'; base-uri {{IMG_ORIGIN}}">
+<meta name="referrer" content="no-referrer">
+<base href="{{IMG_ORIGIN}}/">
+<style>
+  /*{{FONT_FACES}}*/
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0; background: #ffffff; color: #16213c;
+    font-family: "Onest", "Segoe UI", Arial, sans-serif; font-size: 16px; line-height: 1.7;
+    -webkit-user-select: none; user-select: none; cursor: default;
+    -webkit-font-smoothing: antialiased;
+  }
+  body { padding: 6px 24px 24px 24px; }
+
+  /* Savol matni — saytdagi "prose" uslubi */
+  #question { margin-bottom: 24px; word-wrap: break-word; overflow-wrap: anywhere; color: #374151; }
+  #question p, .opt-text p { margin: 0 0 12px 0; }
+  #question p:last-child, .opt-text p:last-child { margin-bottom: 0; }
+  #question strong, #question b, .opt-text strong, .opt-text b { color: #111827; font-weight: 600; }
+  #question h1, #question h2, #question h3, #question h4 { color: #111827; font-weight: 600; line-height: 1.35; margin: 0 0 12px 0; }
+  #question h1 { font-size: 1.35em; } #question h2 { font-size: 1.2em; } #question h3, #question h4 { font-size: 1.08em; }
+  #question ul, #question ol, .opt-text ul, .opt-text ol { margin: 0 0 12px 0; padding-left: 26px; }
+  #question li, .opt-text li { margin: 2px 0; }
+  #question blockquote { margin: 0 0 12px 0; padding-left: 14px; border-left: 3px solid #e5e7eb; color: #4b5563; }
+  #question code, .opt-text code { font-family: Consolas, "Courier New", monospace; font-size: .92em; background: #f3f4f6; padding: 1px 5px; border-radius: 4px; }
+  #question pre { background: #f3f4f6; padding: 12px 14px; border-radius: 8px; overflow-x: auto; margin: 0 0 12px 0; }
+  #question pre code { background: none; padding: 0; }
+  img { max-width: 100%; height: auto; border-radius: 6px; -webkit-user-drag: none; pointer-events: none; }
+  table { border-collapse: collapse; margin: 8px 0 12px 0; max-width: 100%; }
+  td, th { border: 1px solid #d1d5db; padding: 6px 10px; }
+  th { background: #f9fafb; font-weight: 600; }
+  sub, sup { line-height: 0; }
+  a { color: inherit; text-decoration: none; pointer-events: none; }
+  hr { border: 0; border-top: 1px solid #e5e7eb; margin: 14px 0; }
+
+  /* Variantlar — saytdagi kabi: rounded-lg border-2 p-4, tanlangani to'q ko'k */
+  .opt {
+    display: flex; align-items: flex-start; gap: 12px; width: 100%;
+    margin: 0 0 12px 0; padding: 15px 16px; text-align: left;
+    background: #ffffff; border: 2px solid #e5e7eb; border-radius: 8px;
+    font: inherit; color: inherit; cursor: pointer; outline: none;
+    transition: border-color .12s, background .12s, box-shadow .12s;
+  }
+  .opt:last-child { margin-bottom: 0; }
+  .opt:hover { border-color: #1b294b; }
+  .opt.selected { border-color: #1b294b; background: #f4f5f7; box-shadow: 0 1px 2px rgba(15, 23, 42, .06); }
+  .opt-key {
+    flex: 0 0 auto; width: 26px; height: 26px; margin-top: 1px; border-radius: 50%;
+    border: 2px solid #d1d5db; background: #fff; color: #4b5563;
+    display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600; line-height: 1;
+  }
+  .opt.selected .opt-key { border-color: #1b294b; background: #1b294b; color: #fff; }
+  .opt-text { flex: 1 1 auto; min-width: 0; word-wrap: break-word; overflow-wrap: anywhere; color: #374151; }
+  /* Amaliy (practice) rejimida yashirin yordam: to'g'ri variant faqat qalin bo'ladi */
+  .opt.ai-correct .opt-text { font-weight: 700; color: #111827; }
+  .opt-empty { color: #9ca3af; font-style: italic; }
+  body.disabled .opt { cursor: not-allowed; opacity: .6; }
+  body.disabled .opt:hover { border-color: #e5e7eb; }
+  body.disabled .opt.selected:hover { border-color: #1b294b; }
+
+  ::-webkit-scrollbar { width: 10px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 6px; border: 2px solid #fff; }
+  ::-webkit-scrollbar-thumb:hover { background: #9ca3af; }
+</style>
+</head>
+<body>
+<div id="question"></div>
+<div id="options"></div>
+<script nonce="{{NONCE}}">
+(function () {
+  'use strict';
+  var KEYS = ['A', 'B', 'C', 'D'];
+  var questionEl = document.getElementById('question');
+  var optionsEl = document.getElementById('options');
+  var selected = null;
+  var enabled = true;
+  var revealed = null;
+
+  function post(message) {
+    try { window.chrome.webview.postMessage(JSON.stringify(message)); } catch (e) { /* ilovadan tashqarida */ }
+  }
+
+  function applySelection() {
+    var nodes = optionsEl.querySelectorAll('.opt');
+    for (var i = 0; i < nodes.length; i++) {
+      nodes[i].classList.toggle('selected', nodes[i].getAttribute('data-key') === selected);
+    }
+  }
+
+  function applyEnabled() {
+    document.body.classList.toggle('disabled', !enabled);
+  }
+
+  function applyReveal() {
+    var nodes = optionsEl.querySelectorAll('.opt');
+    for (var i = 0; i < nodes.length; i++) {
+      nodes[i].classList.toggle('ai-correct', revealed !== null && nodes[i].getAttribute('data-key') === revealed);
+    }
+  }
+
+  function render(data) {
+    selected = data.selected || null;
+    enabled = data.enabled !== false;
+    revealed = null;
+    questionEl.innerHTML = data.text || '';
+    optionsEl.innerHTML = '';
+    for (var i = 0; i < KEYS.length; i++) {
+      var key = KEYS[i];
+      var html = (data.options && data.options[key]) || '';
+      var button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'opt';
+      button.setAttribute('data-key', key);
+      button.setAttribute('tabindex', '-1');
+      var badge = document.createElement('div');
+      badge.className = 'opt-key';
+      badge.textContent = key;
+      var text = document.createElement('div');
+      text.className = 'opt-text';
+      if (html) { text.innerHTML = html; } else { text.className += ' opt-empty'; text.textContent = '—'; }
+      button.appendChild(badge);
+      button.appendChild(text);
+      optionsEl.appendChild(button);
+    }
+    applySelection();
+    applyEnabled();
+    applyReveal();
+    window.scrollTo(0, 0);
+  }
+
+  optionsEl.addEventListener('click', function (event) {
+    if (!enabled) { return; }
+    var node = event.target;
+    while (node && node !== optionsEl && !(node.classList && node.classList.contains('opt'))) { node = node.parentNode; }
+    if (!node || node === optionsEl) { return; }
+    var key = node.getAttribute('data-key');
+    if (KEYS.indexOf(key) < 0) { return; }
+    selected = key;
+    applySelection();
+    post({ type: 'select', key: key });
+  });
+
+  // Havolalar, matnni sudrash, nusxalash va o'ng tugma menyusi o'chirilgan
+  ['contextmenu', 'dragstart', 'copy', 'cut', 'selectstart'].forEach(function (name) {
+    document.addEventListener(name, function (event) { event.preventDefault(); });
+  });
+
+  // Yashirin yordam tugmasi: "[" bosilganda ilovadan yordam so'raladi.
+  // Rasmiy (imtihon) qurilishida ilova bu xabarga javob bermaydi, shuning uchun hech narsa bo'lmaydi.
+  document.addEventListener('keydown', function (event) {
+    if (!enabled) { return; }
+    if (event.key === '[') {
+      event.preventDefault();
+      if (revealed !== null) {
+        // Yordam ko'rsatilgan bo'lsa — yashiramiz (toggle off).
+        revealed = null;
+        applyReveal();
+      } else {
+        // Aks holda — AI yordamini so'raymiz.
+        post({ type: 'assist' });
+      }
+    }
+  }, true);
+  document.addEventListener('click', function (event) {
+    var node = event.target;
+    while (node && node !== document) {
+      if (node.tagName === 'A') { event.preventDefault(); return; }
+      node = node.parentNode;
+    }
+  }, true);
+
+  window.chrome.webview.addEventListener('message', function (event) {
+    var data = event.data;
+    if (!data || typeof data !== 'object') { return; }
+    if (data.type === 'show') { render(data); }
+    else if (data.type === 'selected') { selected = data.key || null; applySelection(); }
+    else if (data.type === 'enabled') { enabled = !!data.value; applyEnabled(); }
+    else if (data.type === 'reveal') { revealed = (KEYS.indexOf(data.key) >= 0) ? data.key : null; applyReveal(); }
+  });
+
+  post({ type: 'ready' });
+})();
+</script>
+</body>
+</html>

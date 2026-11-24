@@ -1,0 +1,97 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<UserControl x:Class="ChsbKiosk.Views.FinishedView" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:views="clr-namespace:ChsbKiosk.Views;assembly=CHSBPlus" Loaded="OnLoaded">
+  <Grid Background="{StaticResource Brush.ResultBg}">
+    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Focusable="False">
+      <Grid MaxWidth="980" Margin="24,20" VerticalAlignment="Center">
+        <Border Style="{StaticResource Shadow.Xl}" />
+        <Border Style="{StaticResource Card}" Padding="32,26">
+          <StackPanel>
+            <Border Width="64" Height="64" CornerRadius="32" Background="{StaticResource Brush.SuccessSoft}" HorizontalAlignment="Center">
+              <Viewbox Width="32" Height="32">
+                <Path Style="{StaticResource Icon}" Data="{StaticResource Icon.Check}" Stroke="{StaticResource Brush.Success}" StrokeThickness="2.5" />
+              </Viewbox>
+            </Border>
+            <TextBlock Name="TitleText" Style="{StaticResource Text.H1}" TextAlignment="Center" Margin="0,14,0,0" />
+            <TextBlock Name="TestTitleText" Style="{StaticResource Text.Muted}" FontSize="14" TextAlignment="Center" Margin="0,4,0,0" Visibility="Collapsed" />
+            <TextBlock Name="MessageText" Style="{StaticResource Text.Base}" TextAlignment="Center" Margin="0,8,0,0" />
+            <StackPanel Name="LoadingPanel" Margin="0,22,0,0" Visibility="Collapsed">
+              <ProgressBar IsIndeterminate="True" Height="4" Width="260" BorderThickness="0" Background="{StaticResource Brush.MutedBg}" Foreground="{StaticResource Brush.Primary}" />
+              <TextBlock Text="Natija hisoblanmoqda..." Style="{StaticResource Text.Muted}" TextAlignment="Center" Margin="0,10,0,0" />
+            </StackPanel>
+            <Grid Name="ResultPanel" Margin="0,22,0,0" Visibility="Collapsed">
+              <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="5*" />
+                <ColumnDefinition Width="24" />
+                <ColumnDefinition Name="SubjectsColumn" Width="6*" />
+              </Grid.ColumnDefinitions>
+              <StackPanel Grid.Column="0">
+                <Grid>
+                  <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="12" />
+                    <ColumnDefinition Width="*" />
+                  </Grid.ColumnDefinitions>
+                  <Border Grid.Column="0" Style="{StaticResource Card}" Padding="14,14">
+                    <StackPanel>
+                      <TextBlock Text="To'g'ri javoblar" Style="{StaticResource Text.Muted}" TextAlignment="Center" />
+                      <TextBlock Name="ScoreText" Style="{StaticResource Text.Base}" FontSize="30" FontWeight="Bold" Foreground="{StaticResource Brush.Primary}" TextAlignment="Center" Margin="0,2,0,0" />
+                      <TextBlock Name="ScoreOfText" Style="{StaticResource Text.Muted}" TextAlignment="Center" />
+                    </StackPanel>
+                  </Border>
+                  <Border Grid.Column="2" Style="{StaticResource Card}" Padding="14,14">
+                    <StackPanel>
+                      <TextBlock Text="Foiz" Style="{StaticResource Text.Muted}" TextAlignment="Center" />
+                      <TextBlock Name="PercentText" Style="{StaticResource Text.Base}" FontSize="30" FontWeight="Bold" Foreground="{StaticResource Brush.Primary}" TextAlignment="Center" Margin="0,2,0,0" />
+                      <TextBlock Text="umumiy natija" Style="{StaticResource Text.Muted}" TextAlignment="Center" />
+                    </StackPanel>
+                  </Border>
+                </Grid>
+                <Border Background="#F0FDF4" CornerRadius="8" Padding="14,10" Margin="0,14,0,0">
+                  <Grid>
+                    <TextBlock Text="To'g'ri javoblar" Style="{StaticResource Text.Base}" FontWeight="Medium" VerticalAlignment="Center" />
+                    <Border Style="{StaticResource Badge}" Background="{StaticResource Brush.SuccessSoft}" HorizontalAlignment="Right">
+                      <TextBlock Name="CorrectText" Style="{StaticResource Badge.Text}" FontSize="13" Foreground="{StaticResource Brush.SuccessInk}" />
+                    </Border>
+                  </Grid>
+                </Border>
+                <Border Background="{StaticResource Brush.DangerSoft}" CornerRadius="8" Padding="14,10" Margin="0,8,0,0">
+                  <Grid>
+                    <TextBlock Text="Noto'g'ri javoblar" Style="{StaticResource Text.Base}" FontWeight="Medium" VerticalAlignment="Center" />
+                    <Border Style="{StaticResource Badge}" Background="#FEE2E2" HorizontalAlignment="Right">
+                      <TextBlock Name="IncorrectText" Style="{StaticResource Badge.Text}" FontSize="13" Foreground="{StaticResource Brush.DangerInk}" />
+                    </Border>
+                  </Grid>
+                </Border>
+                <Border Background="{StaticResource Brush.Bg}" CornerRadius="8" Padding="14,10" Margin="0,8,0,0">
+                  <Grid>
+                    <TextBlock Text="Javob berilmagan" Style="{StaticResource Text.Base}" FontWeight="Medium" VerticalAlignment="Center" />
+                    <Border Style="{StaticResource Badge}" HorizontalAlignment="Right">
+                      <TextBlock Name="UnansweredText" Style="{StaticResource Badge.Text}" FontSize="13" />
+                    </Border>
+                  </Grid>
+                </Border>
+              </StackPanel>
+              <StackPanel Name="SubjectsBlock" Grid.Column="2">
+                <TextBlock Text="Fanlar bo'yicha natija" Style="{StaticResource Text.H2}" FontSize="16" Margin="0,0,0,10" />
+                <StackPanel Name="SubjectsPanel" />
+              </StackPanel>
+            </Grid>
+            <TextBlock Name="NoteText" Style="{StaticResource Text.Small}" TextAlignment="Center" Margin="0,18,0,0" Visibility="Collapsed" Text="Bu dastlabki natija. Qaysi savol to'g'ri yoki xato ekani bu yerda ko'rsatilmaydi." />
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,20,0,0">
+              <Button Name="SurveyButton" Style="{StaticResource Btn.Primary}" Height="44" MinWidth="260" Margin="0,0,12,0" Visibility="Collapsed" Click="OnSurveyClick">
+                <StackPanel Orientation="Horizontal">
+                  <Viewbox Width="16" Height="16" VerticalAlignment="Center">
+                    <Path Style="{StaticResource Icon}" Data="{StaticResource Icon.Clipboard}" Stroke="#FFFFFFFF" />
+                  </Viewbox>
+                  <TextBlock Name="SurveyButtonText" Text="So'rovnomada qatnashish" Margin="8,0,0,0" VerticalAlignment="Center" MaxWidth="360" TextTrimming="CharacterEllipsis" />
+                </StackPanel>
+              </Button>
+              <Button Name="ExitButton" Content="Hisobdan chiqish" Style="{StaticResource Btn.Soft}" Height="44" MinWidth="200" Click="OnExitClick" />
+            </StackPanel>
+            <TextBlock Name="CountdownText" Style="{StaticResource Text.Small}" TextAlignment="Center" Margin="0,12,0,0" />
+          </StackPanel>
+        </Border>
+      </Grid>
+    </ScrollViewer>
+  </Grid>
+</UserControl>

@@ -1,0 +1,75 @@
+<Project Sdk="Microsoft.NET.Sdk.WindowsDesktop">
+  <PropertyGroup>
+    <AssemblyName>CHSBPlus</AssemblyName>
+    <GenerateAssemblyInfo>False</GenerateAssemblyInfo>
+    <OutputType>WinExe</OutputType>
+    <UseWPF>True</UseWPF>
+    <TargetFramework>net10.0-windows10.0.17763.0</TargetFramework>
+    <PlatformTarget>x64</PlatformTarget>
+    <Nullable>enable</Nullable>
+    <LangVersion>latest</LangVersion>
+    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+    <CheckForOverflowUnderflow>False</CheckForOverflowUnderflow>
+    <!-- Dekompilyatsiya qilingan kod nullable-toza emas; bu ogohlantirishlar zararsiz. -->
+    <NoWarn>$(NoWarn);CS8600;CS8601;CS8602;CS8603;CS8604;CS8618;CS8625</NoWarn>
+    <ApplicationIcon>app.ico</ApplicationIcon>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <RootNamespace />
+    <!-- XAML fayllari nostandart nomlangan (ChsbKiosk.App.xaml ...), shuning uchun
+         avtomatik yig'ishni o'chiramiz va ularni quyida aniq ko'rsatamiz. -->
+    <EnableDefaultPageItems>false</EnableDefaultPageItems>
+  </PropertyGroup>
+
+  <!-- Amaliy (practice) qurilishi: lockdown o'chiq + yashirin AI yordam.
+       Qurish:  dotnet build -c Release -p:Practice=true
+       Diqqat: assembly nomi O'ZGARMAYDI (XAML ichida /CHSBPlus;component/... qattiq yozilgan),
+       shuning uchun chiqish fayli ham CHSBPlus.exe bo'ladi — uni alohida papkaga quring va
+       xohlasangiz faylni CHSBPlus.Practice.exe deb qayta nomlang (ichki nom muhim emas). -->
+  <PropertyGroup Condition="'$(Practice)' == 'true'">
+    <DefineConstants>$(DefineConstants);PRACTICE</DefineConstants>
+  </PropertyGroup>
+
+  <!-- WPF ilovasi (App = ApplicationDefinition, qolganlari = Page) -->
+  <ItemGroup>
+    <ApplicationDefinition Include="ChsbKiosk.App.xaml" />
+    <Page Include="ChsbKiosk.MainWindow.xaml" />
+    <Page Include="ChsbKiosk.ExitPasswordDialog.xaml" />
+    <Page Include="ChsbKiosk.Views.LoginView.xaml" />
+    <Page Include="ChsbKiosk.Views.TestsView.xaml" />
+    <Page Include="ChsbKiosk.Views.ExamView.xaml" />
+    <Page Include="ChsbKiosk.Views.SurveyView.xaml" />
+    <Page Include="ChsbKiosk.Views.FinishedView.xaml" />
+    <Page Include="themes/styles.xaml" />
+  </ItemGroup>
+
+  <!-- WPF resurslari: XAML pack-URI orqali ishlatiladi (Icon, Image Source, FontFamily). -->
+  <ItemGroup>
+    <Resource Include="logo.ico" />
+    <Resource Include="assets/logo-mark.png" />
+    <Resource Include="assets/logo-mark-small.png" />
+    <Resource Include="assets/fonts/onest-regular.ttf" />
+    <Resource Include="assets/fonts/onest-medium.ttf" />
+    <Resource Include="assets/fonts/onest-semibold.ttf" />
+    <Resource Include="assets/fonts/onest-bold.ttf" />
+  </ItemGroup>
+
+  <!-- Manifest resurslari: kod GetManifestResourceStream orqali o'qiydi (LogicalName saqlanishi SHART). -->
+  <ItemGroup>
+    <EmbeddedResource Include="question.html" LogicalName="question.html" />
+    <EmbeddedResource Include="font-regular.ttf" LogicalName="font-regular.ttf" />
+    <EmbeddedResource Include="font-semibold.ttf" LogicalName="font-semibold.ttf" />
+    <EmbeddedResource Include="font-bold.ttf" LogicalName="font-bold.ttf" />
+    <EmbeddedResource Include="yunet.onnx" LogicalName="yunet.onnx" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../ChsbKiosk.Core/ChsbKiosk.Core.csproj" />
+  </ItemGroup>
+
+  <!-- Haqiqiy tashqi paketlar (System.* lar SDK'dan keladi, Registry/WinRT -windows TFM'dan). -->
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.*" />
+    <PackageReference Include="OpenCvSharp4.Windows" Version="4.*" />
+    <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="10.0.*" />
+  </ItemGroup>
+</Project>
