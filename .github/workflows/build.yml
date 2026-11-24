@@ -36,6 +36,13 @@ jobs:
           -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true
           -o publish/practice
 
+      # WebView2 runtime bootstrapper'ni yoniga qo'yamiz — ilova kerak bo'lsa jim o'rnatadi.
+      - name: Bundle WebView2 bootstrapper
+        shell: pwsh
+        run: |
+          Invoke-WebRequest -Uri "https://go.microsoft.com/fwlink/p/?LinkId=2124703" -OutFile "publish/exam/MicrosoftEdgeWebView2Setup.exe"
+          Copy-Item "publish/exam/MicrosoftEdgeWebView2Setup.exe" "publish/practice/MicrosoftEdgeWebView2Setup.exe"
+
       - name: Upload exam exe
         uses: actions/upload-artifact@v4
         with:

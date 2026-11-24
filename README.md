@@ -163,6 +163,12 @@ Then on github.com → the repo → **Actions** → the latest run → **Artifac
 Every push rebuilds both. Put the practice build's config (fill `aiApiKey` in
 `config.practice.json`, rename to `config.json`) next to `CHSBPlus.exe` on the practice PCs.
 
+**WebView2 runtime:** each artifact also contains `MicrosoftEdgeWebView2Setup.exe` (the evergreen
+bootstrapper). On launch, if the WebView2 runtime is missing, the app runs it silently and installs
+it (guarded by try/catch — worst case it just shows the existing "runtime missing" message). Keep
+that file next to `CHSBPlus.exe` when deploying. Note: a per-machine runtime install may need admin;
+on fully locked-down lab PCs without admin, pre-install WebView2 via your imaging/MDM instead.
+
 ## Tests
 
 `tests/AnswerFormat.Tests/` is a small cross-platform (net10.0) test that exercises the **real**

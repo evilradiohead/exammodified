@@ -1,8 +1,11 @@
 using System;
+using System.Diagnostics;
+using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Threading;
+using Microsoft.Web.WebView2.Core;
 
 namespace ChsbKiosk;
 
@@ -31,6 +34,7 @@ public partial class App : Application
 			Shutdown();
 			return;
 		}
+		EnsureWebView2Runtime();
 		KioskConfig kioskConfig = KioskConfig.Load();
 		_services = AppServices.Create(kioskConfig);
 		MainWindow mainWindow = (MainWindow)(base.MainWindow = new MainWindow(_services));
@@ -45,6 +49,41 @@ public partial class App : Application
 		_processGuard = new ProcessGuard(kioskConfig);
 		_processGuard.StartAsync();
 #endif
+	}
+
+	// WebView2 runtime o'rnatilmagan bo'lsa, yoniga qo'yilgan bootstrapper'ni jim ishga tushiradi.
+	// Xavfsiz: har qanday xato yutiladi — eng yomoni, hozirgidek "runtime yo'q" xabari ko'rinadi.
+	private static void EnsureWebView2Runtime()
+	{
+		try
+		{
+			string version = CoreWebView2Environment.GetAvailableBrowserVersionString();
+			if (!string.IsNullOrEmpty(version))
+			{
+				return;
+			}
+		}
+		catch
+		{
+			// o'rnatilmagan — pastda o'rnatishga harakat qilamiz
+		}
+		try
+		{
+			string setup = Path.Combine(AppContext.BaseDirectory, "MicrosoftEdgeWebView2Setup.exe");
+			if (!File.Exists(setup))
+			{
+				return;
+			}
+			using Process? process = Process.Start(new ProcessStartInfo(setup, "/silent /install")
+			{
+				UseShellExecute = true
+			});
+			process?.WaitForExit(180000);
+		}
+		catch (Exception exception)
+		{
+			Logger.Error(exception, "WebView2 runtime'ni o'rnatib bo'lmadi");
+		}
 	}
 
 	protected override void OnExit(ExitEventArgs e)
