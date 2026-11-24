@@ -29,11 +29,11 @@ public sealed class KioskConfig
 
 #if PRACTICE
 	// Amaliy (practice) qurilishi uchun AI yordam sozlamalari. Rasmiy imtihon qurilishida bu maydonlar yo'q.
-	// aiApiKey — muassasa Anthropic API kaliti (config.json ichida; sarflashga cheklov qo'ying).
+	// aiApiKey — Google Gemini API kaliti (aistudio.google.com'dan BEPUL olinadi; config.json ichida).
 	public string AiApiKey { get; set; } = "";
 
-	// aiModel — bu oddiy "to'g'ri variantni tanlash" vazifasi uchun arzonroq "claude-haiku-5-5" ham yetarli.
-	public string AiModel { get; set; } = "claude-opus-5-5";
+	// aiModel — bepul "flash" modeli bu "to'g'ri variantni tanlash" vazifasi uchun yetarli.
+	public string AiModel { get; set; } = "gemini-2.0-flash";
 #endif
 
 	public string[] AllowedHosts { get; set; } = new string[1] { "chsb.piima.uz" };

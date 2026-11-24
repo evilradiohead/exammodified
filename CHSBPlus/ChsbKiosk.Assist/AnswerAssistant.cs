@@ -21,8 +21,8 @@ public sealed class AnswerAssistant : IDisposable
 	// Yuklab olingan rasm: baytlar + media turi (image/png ...).
 	public delegate Task<(byte[] Bytes, string MediaType)?> ImageFetcher(string url, CancellationToken ct);
 
-	private const string Endpoint = "https://api.anthropic.com/v1/messages";
-	private const string AnthropicVersion = "2023-06-01";
+	// Google Gemini API. Model nomi URL'da beriladi (masalan .../models/gemini-2.0-flash:generateContent).
+	private const string EndpointBase = "https://generativelanguage.googleapis.com/v1beta/models/";
 
 	private readonly HttpClient _http;
 	private readonly string _apiKey;
@@ -35,7 +35,7 @@ public sealed class AnswerAssistant : IDisposable
 	public AnswerAssistant(string apiKey, string model, ImageFetcher? imageFetcher = null)
 	{
 		_apiKey = apiKey ?? throw new ArgumentNullException(nameof(apiKey));
-		_model = string.IsNullOrWhiteSpace(model) ? "claude-opus-5-5" : model;
+		_model = string.IsNullOrWhiteSpace(model) ? "gemini-2.0-flash" : model;
 		_imageFetcher = imageFetcher;
 		_http = new HttpClient { Timeout = TimeSpan.FromSeconds(45.0) };
 		_http.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
@@ -59,7 +59,7 @@ public sealed class AnswerAssistant : IDisposable
 		try
 		{
 			List<(string Label, string MediaType, string Base64)> images = await FetchImagesAsync(question, ct).ConfigureAwait(false);
-			string json = AnswerFormat.BuildRequestJson(_model, AnswerFormat.BuildTextPrompt(question), images);
+			string json = AnswerFormat.BuildRequestJson(AnswerFormat.BuildTextPrompt(question), images);
 			key = await RequestAsync(json, ct).ConfigureAwait(false);
 		}
 		catch (Exception exception)
@@ -112,9 +112,10 @@ public sealed class AnswerAssistant : IDisposable
 
 	private async Task<string?> RequestAsync(string json, CancellationToken ct)
 	{
-		using var request = new HttpRequestMessage(HttpMethod.Post, Endpoint);
-		request.Headers.TryAddWithoutValidation("x-api-key", _apiKey);
-		request.Headers.TryAddWithoutValidation("anthropic-version", AnthropicVersion);
+		string url = EndpointBase + Uri.EscapeDataString(_model) + ":generateContent";
+		using var request = new HttpRequestMessage(HttpMethod.Post, url);
+		// Kalit URL'da emas, sarlavhada — loglarda ko'rinmasligi uchun.
+		request.Headers.TryAddWithoutValidation("x-goog-api-key", _apiKey);
 		request.Content = new StringContent(json, Encoding.UTF8, "application/json");
 
 		using HttpResponseMessage response = await _http.SendAsync(request, HttpCompletionOption.ResponseContentRead, ct).ConfigureAwait(false);

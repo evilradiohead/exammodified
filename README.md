@@ -105,9 +105,10 @@ What `PRACTICE` changes:
   that can be minimized/closed/alt-tabbed (see `App.cs`, `MainWindow.cs`, `#if !PRACTICE`).
   Students can research freely and use other apps.
 - **Hidden AI answer hint** — the screen is identical to the exam. Pressing `[` while a
-  question is shown silently asks Claude for the best answer; when it replies (~1–2s) that
-  option's text just turns **bold**. No card, no label, no icon. Press `[` again to **hide** it
-  (toggle). Nothing of this is sent to your server.
+  question is shown silently asks **Google Gemini** for the best answer; when it replies (~1–2s)
+  that option's text just turns **bold**. No card, no label, no icon. Press `[` again to **hide**
+  it (toggle). Nothing of this is sent to your server. Gemini's API has a **free tier** (no card
+  required), which is why it's used here.
 - **Monitoring kept on (watch, don't block)** — unlike the lockdown, the *observing* parts stay:
   - **Heartbeat** runs as normal (app-alive telemetry).
   - **Camera proctoring + snapshots + incident/violation reports** are enabled via
@@ -120,13 +121,16 @@ What `PRACTICE` changes:
     back. Report without enforce (`MainWindow.Window_Deactivated`, `#if PRACTICE`).
 
 Config (`config.practice.json` → rename to `config.json` next to the exe):
-- `aiApiKey` — your institution's Anthropic API key. **Use a dedicated key with a spend cap**;
-  anyone with the exe + config can read it.
-- `aiModel` — defaults to `claude-opus-5-5`; `claude-haiku-5-5` is far cheaper and fine for
-  picking one of four options.
+- `aiApiKey` — a **Google Gemini API key**, free from [aistudio.google.com](https://aistudio.google.com)
+  (no credit card). Create key → paste it here. It's a shared institution key; anyone with the exe +
+  config can read it, so rotate it if it leaks (just make a new one in AI Studio).
+- `aiModel` — defaults to `gemini-2.0-flash` (free tier, fine for picking one of four options).
+  Other free `gemini-*-flash` models work too; set the id here.
 - `cameraPolicy` — `"auto"` keeps camera monitoring on; set `"never"` to turn it off.
 
 Honest limits:
+- The free tier is **rate-limited** (a few requests/minute). Fine for a handful of students;
+  heavy simultaneous use may briefly 429 (the hint just won't appear — press `[` again).
 - The bold = **the AI's pick**, not a verified answer key (your server never sends the real
   answer). Usually right; can be wrong on tricky questions.
 - **Images are supported**: any `<img>` in the question or options is downloaded through the
@@ -135,7 +139,7 @@ Honest limits:
   goes through. Data-URI images are ignored (the text path still runs).
 
 Where the code lives:
-- `CHSBPlus/ChsbKiosk.Assist/AnswerAssistant.cs` — the Claude call + answer parsing (`#if PRACTICE`).
+- `CHSBPlus/ChsbKiosk.Assist/AnswerAssistant.cs` — the Gemini call + answer parsing (`#if PRACTICE`).
 - `CHSBPlus/ChsbKiosk.Rendering/QuestionRenderer.cs` — `[`→`assist`→`Reveal` wiring (`#if PRACTICE`).
 - `CHSBPlus/question.html` — the `[` key, the `reveal` message, and the bold style.
 - `CHSBPlus/ChsbKiosk/KioskConfig.cs` — `AiApiKey` / `AiModel` (`#if PRACTICE`).
@@ -179,8 +183,9 @@ every push:
 ```
 dotnet run --project tests/AnswerFormat.Tests/AnswerFormat.Tests.csproj -c Release
 ```
-It guards the wire format (that the Anthropic request keeps snake_case keys like `max_tokens` /
-`media_type`), the multimodal body shape, and refusal/parse handling.
+It guards the wire format (that the Gemini request keeps the right keys like `systemInstruction` /
+`inlineData` / `maxOutputTokens` and drops the old Anthropic ones), the multimodal body shape, and
+blocked/parse handling.
 
 ## How it was recovered (reproducible)
 

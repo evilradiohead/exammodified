@@ -31,58 +31,63 @@ public static class AnswerFormat
 		PropertyNamingPolicy = JsonNamingPolicy.CamelCase
 	};
 
-	// Anthropic Messages so'rovi tanasini (matn + rasm bloklari) tuzadi va JSON qaytaradi.
-	public static string BuildRequestJson(string model, string textPrompt,
+	// Google Gemini (generateContent) so'rovi tanasini (matn + rasm bloklari) tuzadi va JSON qaytaradi.
+	// Model URL'da beriladi (bu yerda emas), shuning uchun bu metod faqat tanani quradi.
+	public static string BuildRequestJson(string textPrompt,
 		IReadOnlyList<(string Label, string MediaType, string Base64)> images)
 	{
-		var content = new List<object> { new { type = "text", text = textPrompt } };
+		var parts = new List<object> { new { text = textPrompt } };
 		if (images != null)
 		{
 			foreach ((string Label, string MediaType, string Base64) img in images)
 			{
-				content.Add(new { type = "text", text = "Rasm — " + img.Label });
-				content.Add(new
-				{
-					type = "image",
-					source = new { type = "base64", media_type = img.MediaType, data = img.Base64 }
-				});
+				parts.Add(new { text = "Rasm — " + img.Label });
+				parts.Add(new { inlineData = new { mimeType = img.MediaType, data = img.Base64 } });
 			}
 		}
 		var body = new
 		{
-			model = string.IsNullOrWhiteSpace(model) ? "claude-opus-5-5" : model,
-			max_tokens = MaxTokens,
-			system = SystemPrompt,
-			output_config = new { effort = "low" },
-			messages = new[] { new { role = "user", content = content } }
+			systemInstruction = new { parts = new[] { new { text = SystemPrompt } } },
+			contents = new[] { new { role = "user", parts = parts } },
+			generationConfig = new { maxOutputTokens = MaxTokens, temperature = 0 }
 		};
 		return JsonSerializer.Serialize(body, Json);
 	}
 
-	// Javobdagi text bloklaridan birinchi A/B/C/D harfini ajratadi; refusal bo'lsa null.
+	// Gemini javobidagi candidate text qismlaridan birinchi A/B/C/D harfini ajratadi;
+	// prompt bloklangan yoki candidate yo'q bo'lsa null.
 	public static string? ParseAnswerLetter(string payload)
 	{
 		try
 		{
 			using JsonDocument doc = JsonDocument.Parse(payload);
 			JsonElement root = doc.RootElement;
-			if (root.TryGetProperty("stop_reason", out JsonElement stop)
-				&& string.Equals(stop.GetString(), "refusal", StringComparison.Ordinal))
+			// Prompt xavfsizlik sababli bloklangan bo'lsa — javob yo'q.
+			if (root.TryGetProperty("promptFeedback", out JsonElement pf)
+				&& pf.TryGetProperty("blockReason", out _))
 			{
 				return null;
 			}
-			if (!root.TryGetProperty("content", out JsonElement content) || content.ValueKind != JsonValueKind.Array)
+			if (!root.TryGetProperty("candidates", out JsonElement candidates)
+				|| candidates.ValueKind != JsonValueKind.Array
+				|| candidates.GetArrayLength() == 0)
 			{
 				return null;
 			}
 			StringBuilder text = new StringBuilder();
-			foreach (JsonElement block in content.EnumerateArray())
+			foreach (JsonElement cand in candidates.EnumerateArray())
 			{
-				if (block.TryGetProperty("type", out JsonElement type)
-					&& string.Equals(type.GetString(), "text", StringComparison.Ordinal)
-					&& block.TryGetProperty("text", out JsonElement t))
+				if (cand.TryGetProperty("content", out JsonElement content)
+					&& content.TryGetProperty("parts", out JsonElement parts)
+					&& parts.ValueKind == JsonValueKind.Array)
 				{
-					text.Append(t.GetString());
+					foreach (JsonElement part in parts.EnumerateArray())
+					{
+						if (part.TryGetProperty("text", out JsonElement t))
+						{
+							text.Append(t.GetString());
+						}
+					}
 				}
 			}
 			Match match = Regex.Match(text.ToString(), "[ABCD]");

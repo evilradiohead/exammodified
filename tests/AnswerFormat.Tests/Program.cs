@@ -40,26 +40,28 @@ Check("prompt asks for a single letter", prompt.Contains("Javob (faqat bitta har
 var urls = AnswerFormat.CollectImageUrls(q);
 Check("collects 1 image url", urls.Count == 1 && urls[0].Url == "/media/q1.png");
 
-// 4) so'rov JSON wire-format (snake_case saqlanishi SHART)
+// 4) so'rov JSON wire-format — Gemini generateContent tanasi (camelCase saqlanishi SHART)
 string b64 = Convert.ToBase64String(Encoding.UTF8.GetBytes("ABC")); // "QUJD"
 string json = AnswerFormat.BuildRequestJson(
-    "claude-opus-5-5", prompt,
+    prompt,
     new List<(string, string, string)> { ("A varianti", "image/png", b64) });
-foreach (var key in new[] { "\"model\"", "\"max_tokens\"", "\"system\"", "\"output_config\"",
-    "\"effort\"", "\"messages\"", "\"role\":\"user\"", "\"content\"", "\"type\":\"text\"",
-    "\"type\":\"image\"", "\"source\"", "\"media_type\":\"image/png\"", "\"data\":\"QUJD\"" })
+foreach (var key in new[] { "\"systemInstruction\"", "\"contents\"", "\"role\":\"user\"",
+    "\"parts\"", "\"text\"", "\"generationConfig\"", "\"maxOutputTokens\"",
+    "\"inlineData\"", "\"mimeType\":\"image/png\"", "\"data\":\"QUJD\"" })
 {
     Check($"json has {key}", json.Contains(key));
 }
-foreach (var bad in new[] { "maxTokens", "outputConfig", "mediaType" })
+// Anthropic (eski) kalitlari BO'LMASLIGI kerak.
+foreach (var bad in new[] { "\"model\"", "max_tokens", "output_config", "media_type", "\"source\"" })
 {
     Check($"json must NOT have {bad}", !json.Contains(bad));
 }
 
-// 5) javob harfini ajratish (bo'sh thinking blokini e'tiborsiz qoldiradi)
-string sample = "{\"stop_reason\":\"end_turn\",\"content\":[{\"type\":\"thinking\",\"thinking\":\"\"},{\"type\":\"text\",\"text\":\"B\"}]}";
+// 5) javob harfini ajratish — Gemini candidate shakli
+string sample = "{\"candidates\":[{\"content\":{\"parts\":[{\"text\":\"B\"}],\"role\":\"model\"},\"finishReason\":\"STOP\"}]}";
 Check("parses 'B'", AnswerFormat.ParseAnswerLetter(sample) == "B");
-Check("refusal -> null", AnswerFormat.ParseAnswerLetter("{\"stop_reason\":\"refusal\",\"content\":[]}") == null);
+Check("blocked prompt -> null", AnswerFormat.ParseAnswerLetter("{\"promptFeedback\":{\"blockReason\":\"SAFETY\"},\"candidates\":[]}") == null);
+Check("no candidates -> null", AnswerFormat.ParseAnswerLetter("{\"candidates\":[]}") == null);
 Check("garbage -> null", AnswerFormat.ParseAnswerLetter("not json") == null);
 
 Console.WriteLine(failed == 0 ? "\nALL PASS" : $"\n{failed} FAILED");
