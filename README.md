@@ -163,6 +163,19 @@ Then on github.com → the repo → **Actions** → the latest run → **Artifac
 Every push rebuilds both. Put the practice build's config (fill `aiApiKey` in
 `config.practice.json`, rename to `config.json`) next to `CHSBPlus.exe` on the practice PCs.
 
+## Tests
+
+`tests/AnswerFormat.Tests/` is a small cross-platform (net10.0) test that exercises the **real**
+AI-hint logic — now factored into `ChsbKiosk.Core/ChsbKiosk.Core.Assist/AnswerFormat.cs`
+(request-JSON building, answer-letter parsing, HTML→text, image-URL extraction), which the WPF
+`AnswerAssistant` calls. It runs on any OS (no Windows needed) and the CI `test` job runs it on
+every push:
+```
+dotnet run --project tests/AnswerFormat.Tests/AnswerFormat.Tests.csproj -c Release
+```
+It guards the wire format (that the Anthropic request keeps snake_case keys like `max_tokens` /
+`media_type`), the multimodal body shape, and refusal/parse handling.
+
 ## How it was recovered (reproducible)
 
 - Outer `.exe` = .NET single-file installer `CHSBPlusInstaller`, with a ZIP appended
