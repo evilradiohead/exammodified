@@ -329,8 +329,16 @@ public partial class MainWindow : Window, IKioskCommandTarget, IShell, IComponen
 
 	private void Window_Deactivated(object sender, EventArgs e)
 	{
-#if !PRACTICE
-		if (!_exitRequested && !_dialogOpen && !_focusReclaimPending)
+		if (_exitRequested || _dialogOpen)
+		{
+			return;
+		}
+#if PRACTICE
+		// Amaliy rejim: fokus yo'qolishini FAQAT serverga xabar qilamiz (monitoring),
+		// lekin oynani majburan qaytarmaymiz — talaba erkin ishlay oladi.
+		this.FocusLost?.Invoke();
+#else
+		if (!_focusReclaimPending)
 		{
 			this.FocusLost?.Invoke();
 			_focusReclaimPending = true;

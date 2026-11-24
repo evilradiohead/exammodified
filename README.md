@@ -106,14 +106,25 @@ What `PRACTICE` changes:
   Students can research freely and use other apps.
 - **Hidden AI answer hint** — the screen is identical to the exam. Pressing `[` while a
   question is shown silently asks Claude for the best answer; when it replies (~1–2s) that
-  option's text just turns **bold**. No card, no label, no icon. Press `[` again on the next
-  question. Nothing is sent to your server.
+  option's text just turns **bold**. No card, no label, no icon. Press `[` again to **hide** it
+  (toggle). Nothing of this is sent to your server.
+- **Monitoring kept on (watch, don't block)** — unlike the lockdown, the *observing* parts stay:
+  - **Heartbeat** runs as normal (app-alive telemetry).
+  - **Camera proctoring + snapshots + incident/violation reports** are enabled via
+    `cameraPolicy: "auto"` in the practice config (face presence, looking-away, multiple faces →
+    snapshots to your server). This still requires the server to mark the attempt as *proctored*;
+    if practice attempts come back un-proctored, the camera won't start (a small `#if PRACTICE`
+    override could force it — not done yet).
+  - **Focus / tab-switch reporting** — when a student switches away, the app sends a
+    `KIOSK_FOCUS_LOST` signal to your server, but (unlike the exam) does **not** force the window
+    back. Report without enforce (`MainWindow.Window_Deactivated`, `#if PRACTICE`).
 
 Config (`config.practice.json` → rename to `config.json` next to the exe):
 - `aiApiKey` — your institution's Anthropic API key. **Use a dedicated key with a spend cap**;
   anyone with the exe + config can read it.
 - `aiModel` — defaults to `claude-opus-5-5`; `claude-haiku-5-5` is far cheaper and fine for
   picking one of four options.
+- `cameraPolicy` — `"auto"` keeps camera monitoring on; set `"never"` to turn it off.
 
 Honest limits:
 - The bold = **the AI's pick**, not a verified answer key (your server never sends the real
