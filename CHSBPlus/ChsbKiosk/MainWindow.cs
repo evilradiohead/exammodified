@@ -69,15 +69,18 @@ public partial class MainWindow : Window, IKioskCommandTarget, IShell, IComponen
 	private async void Window_Loaded(object sender, RoutedEventArgs e)
 	{
 #if PRACTICE
-		// Amaliy rejim: oddiy (ramkali, ko'chiriladigan, yopiladigan) oyna — kiosk emas.
-		// XAML kiosk uslubini (WindowStyle=None, NoResize, Topmost, taskbarsiz) bu yerda bekor qilamiz,
-		// aks holda ramkasiz oyna "maximized" bo'lganda WPF uni noto'g'ri o'lchamda ko'rsatadi
-		// (sahifa butun ekranni egallamaydi).
-		base.WindowStyle = WindowStyle.SingleBorderWindow;
-		base.ResizeMode = ResizeMode.CanResize;
-		base.ShowInTaskbar = true;
-		base.Topmost = false;
-		base.WindowState = WindowState.Maximized;
+		// Amaliy rejim: imtihondek butun ekranni egallaydi, LEKIN qulflanmaydi.
+		// WindowStyle'ni ish vaqtida o'zgartirmaymiz (bu WindowState'ni Normal'ga qaytaradi) va
+		// "Maximized"dan foydalanmaymiz (ramkasiz oynani WPF noto'g'ri o'lchaydi — sahifa to'liq
+		// ko'rinmaydi). O'rniga ramkasiz oynani ish maydoni (work area) bo'yicha qo'lda joylashtiramiz.
+		base.Topmost = false;        // alt-tab qilsa bo'ladi
+		base.ShowInTaskbar = true;   // vazifalar panelida ko'rinadi
+		base.WindowState = WindowState.Normal;
+		base.Left = SystemParameters.WorkArea.Left;
+		base.Top = SystemParameters.WorkArea.Top;
+		base.Width = SystemParameters.WorkArea.Width;
+		base.Height = SystemParameters.WorkArea.Height;
+		Activate();
 #else
 		EnterKioskMode();
 #endif
