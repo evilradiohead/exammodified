@@ -69,6 +69,14 @@ public partial class MainWindow : Window, IKioskCommandTarget, IShell, IComponen
 	private async void Window_Loaded(object sender, RoutedEventArgs e)
 	{
 #if PRACTICE
+		// Amaliy rejim: oddiy (ramkali, ko'chiriladigan, yopiladigan) oyna — kiosk emas.
+		// XAML kiosk uslubini (WindowStyle=None, NoResize, Topmost, taskbarsiz) bu yerda bekor qilamiz,
+		// aks holda ramkasiz oyna "maximized" bo'lganda WPF uni noto'g'ri o'lchamda ko'rsatadi
+		// (sahifa butun ekranni egallamaydi).
+		base.WindowStyle = WindowStyle.SingleBorderWindow;
+		base.ResizeMode = ResizeMode.CanResize;
+		base.ShowInTaskbar = true;
+		base.Topmost = false;
 		base.WindowState = WindowState.Maximized;
 #else
 		EnterKioskMode();
